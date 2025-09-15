@@ -6,14 +6,14 @@ const HabitContext = createContext();
 const todayKey = (date = new Date()) => format(date, "yyyy-MM-dd");
 
 const migrateOldHabit = (h) => {
-  
+  // If already has history, return as-is
   if (h.history && typeof h.history === "object") return h;
   const migrated = {
     id: h.id ?? Date.now(),
     name: h.name ?? h.title ?? "Untitled Habit",
     history: {},
   };
- 
+  // If old object had 'completed' boolean, set for today
   if (typeof h.completed === "boolean") migrated.history[todayKey()] = !!h.completed;
   return migrated;
 };
@@ -25,7 +25,7 @@ export const HabitProvider = ({ children }) => {
       if (!raw) return [];
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
-    
+      // migrate any old shapes
       return parsed.map(migrateOldHabit);
     } catch (e) {
       console.error("Failed parsing habits from localStorage", e);
@@ -34,7 +34,7 @@ export const HabitProvider = ({ children }) => {
     }
   });
 
-  
+  // persist
   useEffect(() => {
     try {
       localStorage.setItem("habits", JSON.stringify(habits));
@@ -43,7 +43,7 @@ export const HabitProvider = ({ children }) => {
     }
   }, [habits]);
 
-  
+  // add new habit
   const addHabit = (name) => {
     const newHabit = {
       id: Date.now(),
@@ -53,12 +53,12 @@ export const HabitProvider = ({ children }) => {
     setHabits((prev) => [...prev, newHabit]);
   };
 
-
+  // remove habit
   const removeHabit = (id) => {
     setHabits((prev) => prev.filter((h) => h.id !== id));
   };
 
- 
+  // toggle completion for a habit on a specific date (date can be string yyyy-MM-dd or Date)
   const toggleHabit = (id, date = new Date()) => {
     const key = typeof date === "string" ? date : todayKey(date);
     setHabits((prev) =>
@@ -70,7 +70,7 @@ export const HabitProvider = ({ children }) => {
     );
   };
 
- 
+  // set explicit value (true/false)
   const setHabitForDay = (id, date, value) => {
     const key = typeof date === "string" ? date : todayKey(date);
     setHabits((prev) =>
@@ -78,7 +78,7 @@ export const HabitProvider = ({ children }) => {
     );
   };
 
-  
+  // get daily completion result
   const getDailyCompletion = (date = new Date()) => {
     const key = typeof date === "string" ? date : todayKey(date);
     const total = habits.length;
@@ -88,7 +88,7 @@ export const HabitProvider = ({ children }) => {
     return { completedCount, totalCount: total, percentage, date: key };
   };
 
-  
+  // get weekly data array starting from weekStart (weekStartsOn: 1 -> Monday)
   const getWeeklyData = (date = new Date(), weekStartsOn = 1) => {
     const start = startOfWeek(date, { weekStartsOn });
     const days = Array.from({ length: 7 }).map((_, i) => {
@@ -108,7 +108,7 @@ export const HabitProvider = ({ children }) => {
     return days;
   };
 
- 
+  // expose
   return (
     <HabitContext.Provider
       value={{

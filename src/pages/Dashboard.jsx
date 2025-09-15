@@ -47,6 +47,11 @@ const Dashboard = () => {
 
   const staticWeeklyTotal = "8h 00m";
 
+  // ✅ Habit Names
+  const completedHabitNames = habits.filter(h => h.completed).map(h => h.name);
+  const remainingHabitNames = habits.filter(h => !h.completed).map(h => h.name);
+
+  // ✅ Chart Data
   const doughnutData = {
     labels: ["Completed", "Remaining"],
     datasets: [
@@ -58,6 +63,26 @@ const Dashboard = () => {
         borderWidth: 2,
       },
     ],
+  };
+
+  // ✅ Chart Options with tooltips
+  const doughnutOptions = {
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            if (context.label === "Completed") {
+              return `Completed: ${completedHabitNames.length > 0 ? completedHabitNames.join(", ") : "None"}`;
+            } else {
+              return `Remaining: ${remainingHabitNames.length > 0 ? remainingHabitNames.join(", ") : "None"}`;
+            }
+          },
+        },
+      },
+      legend: {
+        position: "bottom",
+      },
+    },
   };
 
   const cards = [
@@ -101,7 +126,7 @@ const Dashboard = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {cards.map((card, index) => (
+        {cards.map((card) => (
           <motion.div
             key={card.id}
             className={`p-4 rounded-xl shadow-md bg-gradient-to-br ${card.color} text-gray-800 flex flex-col justify-between h-36 sm:h-40`}
@@ -153,11 +178,10 @@ const Dashboard = () => {
           Habit Completion
         </h2>
         <div className="w-40 h-40 sm:w-64 sm:h-64">
-          <Doughnut data={doughnutData} />
+          <Doughnut data={doughnutData} options={doughnutOptions} />
         </div>
         <p className="mt-4 text-gray-600 text-base sm:text-lg font-medium">
-          You have completed {completedHabits} out of {totalHabits} habits today
-          🎯
+          You have completed {completedHabits} out of {totalHabits} habits today 🎯
         </p>
       </motion.div>
     </div>

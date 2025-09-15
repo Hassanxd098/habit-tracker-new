@@ -9,8 +9,6 @@ import {
   Activity,
 } from "lucide-react";
 import {
-  startOfWeek,
-  endOfWeek,
   startOfMonth,
   endOfMonth,
   eachDayOfInterval,
@@ -25,18 +23,6 @@ const HabitProgress = () => {
   const [monthlyTrend, setMonthlyTrend] = useState([]);
   const [monthComparison, setMonthComparison] = useState(0);
   const controls = useAnimation();
-
-  const generateLinePath = (data, maxHeight = 120, width = 200) => {
-    if (!data.length) return "";
-    const step = width / (data.length - 1);
-    return data
-      .map((d, i) => {
-        const x = i * step;
-        const y = maxHeight - (d.percentage / 100) * maxHeight;
-        return `${i === 0 ? "M" : "L"} ${x},${y}`;
-      })
-      .join(" ");
-  };
 
   useEffect(() => {
     const todayStats = getDailyCompletion(new Date());
@@ -118,22 +104,23 @@ const HabitProgress = () => {
         </div>
       </div>
 
-      {/* Weekly Line Chart */}
+      {/* Weekly Bar Chart */}
       <div className="bg-white rounded-2xl p-6 shadow-lg">
         <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
           <Calendar className="text-blue-600" /> Weekly Progress
         </h3>
-        <svg viewBox="0 0 200 120" className="w-full h-32">
-          <motion.path
-            d={generateLinePath(weeklyData)}
-            fill="none"
-            stroke="#7C3AED"
-            strokeWidth="3"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 1.2 }}
-          />
-        </svg>
+        <div className="flex items-end justify-between h-32 gap-2">
+          {weeklyData.map((d, i) => (
+            <motion.div
+              key={i}
+              className="bg-purple-500 rounded-md w-full"
+              initial={{ height: 0 }}
+              animate={{ height: `${d.percentage}%` }}
+              transition={{ duration: 0.8 }}
+              title={`${d.percentage}%`}
+            />
+          ))}
+        </div>
         <div className="flex justify-between mt-2 text-xs text-gray-600">
           {weeklyData.map((d) => (
             <span key={d.label}>{d.label}</span>
@@ -141,7 +128,7 @@ const HabitProgress = () => {
         </div>
       </div>
 
-      {/* Monthly (6 months trend) */}
+      {/* Monthly Bar Chart */}
       <div className="bg-white rounded-2xl p-6 shadow-lg flex flex-col">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-bold mb-2">Last 6 Months</h3>
@@ -157,17 +144,20 @@ const HabitProgress = () => {
             {Math.abs(monthComparison)}%
           </motion.div>
         </div>
-        <svg viewBox="0 0 200 120" className="w-full h-32">
-          <motion.path
-            d={generateLinePath(monthlyTrend, 120, 200)}
-            fill="none"
-            stroke={monthComparison >= 0 ? "#16a34a" : "#dc2626"}
-            strokeWidth="3"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 1.5 }}
-          />
-        </svg>
+        <div className="flex items-end justify-between h-32 gap-2">
+          {monthlyTrend.map((m, i) => (
+            <motion.div
+              key={i}
+              className={`rounded-md w-full ${
+                monthComparison >= 0 ? "bg-green-500" : "bg-red-500"
+              }`}
+              initial={{ height: 0 }}
+              animate={{ height: `${m.percentage}%` }}
+              transition={{ duration: 0.8 }}
+              title={`${m.percentage}%`}
+            />
+          ))}
+        </div>
         <div className="flex justify-between mt-2 text-xs text-gray-600">
           {monthlyTrend.map((m) => (
             <span key={m.label}>{m.label}</span>

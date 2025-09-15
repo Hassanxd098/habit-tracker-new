@@ -31,7 +31,7 @@ const Sidebar = () => {
         {/* Toggle Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="mb-6 p-2 rounded hover:bg-gray-200"
+          className="mb-6 p-2 rounded hover:bg-gray-200 "
         >
           {isOpen ? <X size={28} /> : <Menu size={30} />}
         </button>
