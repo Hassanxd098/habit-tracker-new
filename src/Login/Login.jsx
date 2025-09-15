@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { FcGoogle } from "react-icons/fc"; // Google icon
+import { FcGoogle } from "react-icons/fc";
 import { ScanFace } from "lucide-react";
+import { auth, googleProvider } from "../firebase";
+import { signInWithPopup } from "firebase/auth";
+
 
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState("");
@@ -10,6 +13,22 @@ const Login = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // 🔹 Google Login
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      if (typeof onLogin === "function") {
+        onLogin(user.email);
+      }
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Google login failed:", error.message);
+      alert("Google login failed!");
+    }
+  };
+
+  // 🔹 Dummy Email/Password (optional: replace with Firebase Auth later)
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -19,15 +38,11 @@ const Login = ({ onLogin }) => {
     }
 
     setLoading(true);
-
     setTimeout(() => {
       setLoading(false);
-
       if (typeof onLogin === "function") {
         onLogin(email);
         navigate("/dashboard");
-      } else {
-        console.error("onLogin is not provided");
       }
     }, 2000);
   };
@@ -59,9 +74,7 @@ const Login = ({ onLogin }) => {
         >
           {/* Logo / Heading */}
           <div className="flex flex-col items-center mb-6">
-           <div>
-           <ScanFace />
-           </div>
+            <ScanFace />
             <h2 className="text-2xl font-semibold text-gray-800">
               Sign in to Habit Tracker
             </h2>
@@ -72,6 +85,7 @@ const Login = ({ onLogin }) => {
 
           {/* Google Login */}
           <button
+            onClick={handleGoogleLogin}
             type="button"
             className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-lg py-3 mb-6 hover:bg-gray-100 transition"
           >
@@ -97,7 +111,6 @@ const Login = ({ onLogin }) => {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full p-3 mb-4 border rounded-lg focus:ring-2 focus:ring-violet-400 focus:outline-none"
             />
-
             <input
               type="password"
               placeholder="Password"
@@ -105,7 +118,6 @@ const Login = ({ onLogin }) => {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-3 mb-6 border rounded-lg focus:ring-2 focus:ring-violet-400 focus:outline-none"
             />
-
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -116,7 +128,6 @@ const Login = ({ onLogin }) => {
             </motion.button>
           </form>
 
-          {/* Bottom Link */}
           <p className="text-sm text-center text-gray-500 mt-6">
             Don’t have an account?{" "}
             <span className="text-violet-600 font-medium cursor-pointer hover:underline">

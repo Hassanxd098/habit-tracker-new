@@ -27,7 +27,7 @@ export const HabitProvider = ({ children }) => {
       if (!Array.isArray(parsed)) return [];
       // migrate any old shapes
       return parsed.map(migrateOldHabit);
-    } catch (e) {
+    } catch (e) { 
       console.error("Failed parsing habits from localStorage", e);
       localStorage.removeItem("habits");
       return [];
