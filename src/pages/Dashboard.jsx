@@ -25,33 +25,21 @@ const Dashboard = () => {
   const streakDays = 12;
   const weeklyGoalPercent = completionPercentage;
 
-  const [seconds, setSeconds] = useState(0);
-  const [running, setRunning] = useState(false);
+  // ✅ Live Time & Date
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    let interval;
-    if (running) {
-      interval = setInterval(() => {
-        setSeconds((prev) => prev + 1);
-      }, 1000);
-    }
+    const interval = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(interval);
-  }, [running]);
+  }, []);
 
-  const formatTime = (s) => {
-    const h = String(Math.floor(s / 3600)).padStart(2, "0");
-    const m = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
-    const sec = String(s % 60).padStart(2, "0");
-    return `${h}:${m}:${sec}`;
-  };
+  const completedHabitNames = habits
+    .filter((h) => h.completed)
+    .map((h) => h.name);
+  const remainingHabitNames = habits
+    .filter((h) => !h.completed)
+    .map((h) => h.name);
 
-  const staticWeeklyTotal = "8h 00m";
-
-  // ✅ Habit Names
-  const completedHabitNames = habits.filter(h => h.completed).map(h => h.name);
-  const remainingHabitNames = habits.filter(h => !h.completed).map(h => h.name);
-
-  // ✅ Chart Data
   const doughnutData = {
     labels: ["Completed", "Remaining"],
     datasets: [
@@ -65,24 +53,27 @@ const Dashboard = () => {
     ],
   };
 
-  // ✅ Chart Options with tooltips
   const doughnutOptions = {
     plugins: {
       tooltip: {
         callbacks: {
-          label: function (context) {
-            if (context.label === "Completed") {
-              return `Completed: ${completedHabitNames.length > 0 ? completedHabitNames.join(", ") : "None"}`;
-            } else {
-              return `Remaining: ${remainingHabitNames.length > 0 ? remainingHabitNames.join(", ") : "None"}`;
-            }
-          },
+          label: (context) =>
+            context.label === "Completed"
+              ? `Completed: ${
+                  completedHabitNames.length
+                    ? completedHabitNames.join(", ")
+                    : "None"
+                }`
+              : `Remaining: ${
+                  remainingHabitNames.length
+                    ? remainingHabitNames.join(", ")
+                    : "None"
+                }`,
         },
       },
-      legend: {
-        position: "bottom",
-      },
+      legend: { position: "bottom" },
     },
+    maintainAspectRatio: false,
   };
 
   const cards = [
@@ -109,81 +100,97 @@ const Dashboard = () => {
     },
     {
       id: 4,
-      title: "Time Spent",
+      title: "Current Time",
       icon: <Clock size={28} className="text-orange-600" />,
       color: "from-orange-200 to-orange-400",
-      type: "timer",
+      type: "datetime",
     },
   ];
 
   return (
-    <div className="p-4 sm:p-6 space-y-8">
+    <div className="flex flex-col h-screen overflow-hidden">
       {/* Header */}
-      <motion.h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-        👋 Welcome Back!{" "}
-        <span className="text-violet-600">Let’s build your habits today</span>
-      </motion.h1>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {cards.map((card) => (
-          <motion.div
-            key={card.id}
-            className={`p-4 rounded-xl shadow-md bg-gradient-to-br ${card.color} text-gray-800 flex flex-col justify-between h-36 sm:h-40`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="p-2 bg-white rounded-lg shadow">{card.icon}</div>
-              <CheckCircle className="text-gray-600" size={18} />
-            </div>
-
-            <h2 className="text-base font-semibold">{card.title}</h2>
-
-            {card.type === "timer" ? (
-              <div className="flex flex-col gap-1">
-                <p className="text-lg font-bold">{formatTime(seconds)}</p>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => setRunning((r) => !r)}
-                    className={`px-2 py-0.5 text-xs rounded-md text-white ${
-                      running ? "bg-yellow-500" : "bg-green-600"
-                    }`}
-                  >
-                    {running ? "Pause" : "Start"}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setRunning(false);
-                      setSeconds(0);
-                    }}
-                    className="px-2 py-0.5 text-xs rounded-md bg-red-500 text-white"
-                  >
-                    Reset
-                  </button>
-                </div>
-                <p className="text-xs text-gray-700">
-                  Weekly:{" "}
-                  <span className="font-semibold">{staticWeeklyTotal}</span>
-                </p>
-              </div>
-            ) : (
-              <p className="text-xl font-bold">{card.value}</p>
-            )}
-          </motion.div>
-        ))}
+      <div className="sticky top-0 bg-white z-50 p-4 shadow-md">
+        <motion.h1
+          className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          👋 Welcome Back!{" "}
+          <span className="text-violet-600">Let's build your habits today</span>
+        </motion.h1>
       </div>
 
-      {/* Doughnut Chart */}
-      <motion.div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-4">
-          Habit Completion
-        </h2>
-        <div className="w-40 h-40 sm:w-64 sm:h-64">
-          <Doughnut data={doughnutData} options={doughnutOptions} />
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-8">
+        {/* Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          {cards.map((card, index) => (
+            <motion.div
+              key={card.id}
+              className={`p-4 rounded-2xl shadow-lg bg-gradient-to-br ${card.color} flex flex-col justify-between h-36 sm:h-44`}
+              whileHover={{
+                scale: 1.03,
+                boxShadow: "0 20px 30px rgba(0,0,0,0.2)",
+              }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2 bg-white rounded-lg shadow">
+                  {card.icon}
+                </div>
+                <CheckCircle className="text-gray-600" size={18} />
+              </div>
+
+              <h2 className="text-sm sm:text-base font-semibold mt-2">
+                {card.title}
+              </h2>
+
+              {card.type === "datetime" ? (
+                <div className="flex flex-col gap-1">
+                  <p className="text-lg sm:text-xl font-bold">
+                    {currentTime.toLocaleTimeString()}
+                  </p>
+                  <p className="text-xs sm:text-sm text-gray-700">
+                    {currentTime.toLocaleDateString(undefined, {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xl sm:text-2xl font-bold mt-2">
+                  {card.value}
+                </p>
+              )}
+            </motion.div>
+          ))}
         </div>
-        <p className="mt-4 text-gray-600 text-base sm:text-lg font-medium">
-          You have completed {completedHabits} out of {totalHabits} habits today 🎯
-        </p>
-      </motion.div>
+
+        {/* Doughnut Chart */}
+        <motion.div
+          className="bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center w-full md:w-3/4 mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-4">
+            Habit Completion
+          </h2>
+          <div className="w-48 h-48 sm:w-64 sm:h-64">
+            <Doughnut data={doughnutData} options={doughnutOptions} />
+          </div>
+          <p className="mt-4 text-gray-600 text-sm sm:text-base text-center font-medium">
+            You have completed {completedHabits} out of {totalHabits} habits
+            today 🎯
+          </p>
+        </motion.div>
+      </div>
     </div>
   );
 };
